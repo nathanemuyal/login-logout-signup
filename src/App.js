@@ -1,24 +1,44 @@
-import logo from './logo.svg';
 import './App.css';
+import {BrowserRouter, Routes,Route} from "react-router-dom";
+import Home from './pages/Home/Home'
+import Dashboard from "./pages/Dashboard/Dashboard";
+import {useState,useEffect} from "react";
+import ProtectedRoute from "./components/ProtectedRoute";
+import {auth} from "./db/firebase";
+import {onAuthStateChanged} from "firebase/auth";
 
 function App() {
+
+    const [user, setUser] =useState(null);
+    const [isFetch,setIsFetch] = useState(true);
+
+    useEffect(()=> {
+        const unsubscribe =onAuthStateChanged(auth,(user)=>{
+            if (user){
+                setUser(user);
+                setIsFetch(false);
+                return;
+            }
+            setUser(null);
+            setIsFetch(false);
+
+        })
+        return ()=> unsubscribe();
+    },[])
+
+    if (isFetch){
+        return <h2>In conechen</h2>
+    }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+   <>
+        <BrowserRouter>
+            <Routes>
+                <Route path='/' element={<Home user={user}/>}/>
+                <Route path='/dashboard' element={<ProtectedRoute user={user}><Dashboard /></ProtectedRoute>}/>
+            </Routes>
+        </BrowserRouter>
+   </>
   );
 }
 
